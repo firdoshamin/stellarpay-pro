@@ -11,6 +11,12 @@
 
 ---
 
+## 🌐 Live Demo
+
+🔗 **Live Production URL**: [https://stellarpay-o32jwicz5-firdosh.vercel.app/](https://stellarpay-o32jwicz5-firdosh.vercel.app/)
+
+---
+
 ## 🌟 Overview
 
 **StellarPay Pro** is a high-performance Web3 financial application built on top of the Stellar Network and Soroban smart contract ecosystem. Designed with sleek dark glassmorphism, strict decoupled architecture, and real-time Horizon REST & Soroban RPC node synchronization.
@@ -103,6 +109,16 @@ The UI provides step-by-step progress banners and handles rejections gracefully 
 
 ---
 
+## ☁️ Deployment
+
+StellarPay Pro is deployed on **Vercel**.
+- **Deployment Platform**: Vercel
+- **Production Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Live URL**: [https://stellarpay-o32jwicz5-firdosh.vercel.app/](https://stellarpay-o32jwicz5-firdosh.vercel.app/)
+
+---
+
 ## 🔗 On-Chain Verification Examples
 
 Live verified transactions on Stellar Testnet for contract `CBNFYYS23WL3CT6H7O2KVOY3OO2AXYZPXBZTID6SHXZMW55IFVGCQEE7`:
@@ -135,7 +151,7 @@ Live verified transactions on Stellar Testnet for contract `CBNFYYS23WL3CT6H7O2K
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/stellarpay-pro.git
+git clone https://github.com/firdoshamin/stellarpay-pro.git
 cd stellarpay-pro
 
 # 2. Install dependencies
@@ -213,17 +229,33 @@ npm run build
 ![Wallet Connected](docs/screenshots/wallet-connected.png)
 *Displays truncated public key (G...), active provider badge, and network indicator.*
 
-### 2. XLM Balance Display
+### 2. Wallet Options (Multi-Wallet Integration)
+![Wallet Options](docs/screenshots/wallet-options.png)
+*StellarWalletsKit multi-wallet modal providing options for Freighter, Albedo, xBull, Rabet, Lobstr, and Hana.*
+
+### 3. XLM Balance Display
 ![XLM Balance](docs/screenshots/xlm-balance.png)
 *Live account XLM balance queried from Horizon Testnet REST API.*
 
-### 3. Successful Testnet Transaction
+### 4. Payment Flow & Result Handling
+![Transaction Result](docs/screenshots/transaction-result.png)
+*Payment form confirmation and resilient error handling for rejections or invalid transactions.*
+
+### 5. Successful Stellar Testnet XLM Payment
 ![Successful Testnet Transaction](docs/screenshots/transaction-success.png)
 *Successful Stellar Testnet XLM payment confirmation displaying the 64-character transaction hash, operation status, and direct StellarExpert Explorer link.*
 
-### 4. Transaction Result & Failure Handling
-![Transaction Result](docs/screenshots/transaction-result.png)
-*Payment form confirmation and resilient error handling for rejections or invalid transactions.*
+### 6. Successful On-chain Transaction Confirmation
+![On-chain Transaction Confirmation](docs/screenshots/ss -transaction success.png)
+*Live on-chain payment execution confirmation on Stellar Testnet.*
+
+### 7. Soroban Smart Contract ID & On-chain Record Query
+![Soroban Smart Contract](docs/screenshots/ss-contract.png)
+*Soroban WASM Contract Hub showing Contract ID `CBNFYYS23WL3CT6H7O2KVOY3OO2AXYZPXBZTID6SHXZMW55IFVGCQEE7`, payments recorded counter, ABI spec, and live read-only state query (`get_payment`).*
+
+### 8. Vercel Production Deployment
+![Vercel Deployment](docs/screenshots/vercel-deployment.png)
+*Successful production deployment build configuration on Vercel.*
 
 ---
 
