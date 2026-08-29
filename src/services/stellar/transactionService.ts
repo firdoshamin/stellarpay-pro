@@ -25,6 +25,8 @@ export interface PaymentResult {
   ledger?: number;
 }
 
+import { validateSufficientBalance } from '../../utils/errorNormalizer';
+
 export class TransactionService {
   private horizonUrl: string | null = null;
 
@@ -61,6 +63,14 @@ export class TransactionService {
       throw new Error(
         `Source account is not active on ${currentNetwork.name}. Please fund your account with Friendbot first.`
       );
+    }
+
+    // 2. Validate XLM balance if transferring native asset
+    if (assetCode === 'XLM' || !assetCode) {
+      const nativeBalanceRecord = account.balances.find((b: { asset_type: string }) => b.asset_type === 'native');
+      const availableXlm = parseFloat(nativeBalanceRecord?.balance || '0');
+      const requestedXlm = parseFloat(amount);
+      validateSufficientBalance(requestedXlm, availableXlm, 0.00001);
     }
 
     // 2. Build payment operation

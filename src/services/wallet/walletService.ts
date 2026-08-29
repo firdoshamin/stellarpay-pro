@@ -24,6 +24,11 @@ import {
   IWalletService,
   WalletConnectionResult,
 } from './types';
+import {
+  WalletNotFoundError,
+  UserRejectedError,
+} from '../../types/errors';
+import { normalizeWalletError } from '../../utils/errorNormalizer';
 
 const WALLET_MODULE_IDS: Record<string, string> = {
   freighter: FREIGHTER_ID,
@@ -130,7 +135,7 @@ export class WalletService implements IWalletService {
     if (walletType === 'freighter') {
       const installed = await this.isInstalled('freighter');
       if (!installed) {
-        throw new Error('Freighter wallet extension not detected in your browser. Please install the official Freighter extension and refresh this page.');
+        throw new WalletNotFoundError('Freighter');
       }
 
       try {
@@ -147,12 +152,12 @@ export class WalletService implements IWalletService {
           if (trimmed.startsWith('G') && trimmed.length === 56) {
             publicKey = trimmed;
           } else if (trimmed.toLowerCase().includes('reject') || trimmed.toLowerCase().includes('cancel') || trimmed.toLowerCase().includes('decline')) {
-            throw new Error('Wallet connection request was cancelled or declined in Freighter.');
+            throw new UserRejectedError('wallet connection');
           }
         } else if (accessResult && typeof accessResult === 'object') {
           const resObj = accessResult as { address?: string; publicKey?: string; error?: string };
           if (resObj.error) {
-            throw new Error(`Freighter authorization rejected: ${resObj.error}`);
+            throw new UserRejectedError('wallet connection');
           }
           publicKey = resObj.address || resObj.publicKey || '';
         }
@@ -191,20 +196,19 @@ export class WalletService implements IWalletService {
       } catch (error) {
         this.activeWalletType = null;
         this.activePublicKey = null;
-        if (error instanceof Error) throw error;
-        throw new Error('Unable to complete connection to Freighter.');
+        throw normalizeWalletError(error, 'Freighter');
       }
     }
 
     // 2. Multi-Wallet Integration via StellarWalletsKit (Albedo, xBull, Rabet, Lobstr, Hana)
     const moduleId = WALLET_MODULE_IDS[walletType];
     if (!moduleId) {
-      throw new Error(`Wallet provider "${walletType}" is not supported.`);
+      throw new WalletNotFoundError(walletType);
     }
 
     const available = await this.isInstalled(walletType);
     if (!available) {
-      throw new Error(`Wallet provider "${walletType.toUpperCase()}" is not installed or available in your browser.`);
+      throw new WalletNotFoundError(walletType.toUpperCase());
     }
 
     try {
@@ -237,8 +241,7 @@ export class WalletService implements IWalletService {
       this.activeWalletType = null;
       this.activePublicKey = null;
       console.error(`[StellarPay WalletService] StellarWalletsKit connect error for ${walletType}:`, err);
-      if (err instanceof Error) throw err;
-      throw new Error(`Failed to connect to ${walletType}.`);
+      throw normalizeWalletError(err, walletType.toUpperCase());
     }
   }
 
@@ -285,18 +288,12 @@ export class WalletService implements IWalletService {
         }
 
         if (!signedXdr || typeof signedXdr !== 'string') {
-          throw new Error('Transaction signing was cancelled or failed.');
+          throw new UserRejectedError('transaction signing');
         }
 
         return signedXdr;
       } catch (error) {
-        if (error instanceof Error) {
-          if (error.message.toLowerCase().includes('reject') || error.message.toLowerCase().includes('cancel')) {
-            throw new Error('Transaction signing was cancelled in Freighter extension.');
-          }
-          throw error;
-        }
-        throw new Error('Transaction signing failed in Freighter.');
+        throw normalizeWalletError(error, 'Freighter');
       }
     }
 
@@ -310,19 +307,13 @@ export class WalletService implements IWalletService {
       });
 
       if (!res || !res.signedTxXdr) {
-        throw new Error('Transaction signing was cancelled or produced no XDR output.');
+        throw new UserRejectedError('transaction signing');
       }
 
       return res.signedTxXdr;
     } catch (err) {
       console.error('[StellarPay WalletService] StellarWalletsKit signTransaction error:', err);
-      if (err instanceof Error) {
-        if (err.message.toLowerCase().includes('reject') || err.message.toLowerCase().includes('cancel')) {
-          throw new Error(`Transaction signing was cancelled in ${this.activeWalletType?.toUpperCase()}.`);
-        }
-        throw err;
-      }
-      throw new Error(`Transaction signing failed in ${this.activeWalletType?.toUpperCase()}.`);
+      throw normalizeWalletError(err, this.activeWalletType?.toUpperCase() || 'Wallet');
     }
   }
 
