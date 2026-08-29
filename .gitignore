@@ -15,10 +15,12 @@ lerna-debug.log*
 .env.production.local
 *.pem
 
-# Dependencies
+# Dependencies & Build Output
 node_modules/
 dist/
 dist-ssr/
+target/
+contracts/**/target/
 *.local
 
 # Editor & System

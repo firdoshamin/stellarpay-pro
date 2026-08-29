@@ -1,3 +1,5 @@
+import { Networks } from '@stellar/stellar-sdk';
+
 export interface NetworkConfig {
   id: string;
   name: string;
@@ -14,7 +16,7 @@ export const STELLAR_NETWORKS: Record<string, NetworkConfig> = {
     name: 'Stellar Testnet',
     horizonUrl: import.meta.env.VITE_STELLAR_HORIZON_URL || 'https://horizon-testnet.stellar.org',
     sorobanRpcUrl: import.meta.env.VITE_SOROBAN_RPC_URL || 'https://soroban-testnet.stellar.org',
-    passphrase: import.meta.env.VITE_STELLAR_NETWORK_PASSPHRASE || 'Test SDF Network ; September 2015',
+    passphrase: import.meta.env.VITE_STELLAR_NETWORK_PASSPHRASE || Networks.TESTNET,
     explorerUrl: 'https://stellar.expert/explorer/testnet',
     isTestnet: true,
   },

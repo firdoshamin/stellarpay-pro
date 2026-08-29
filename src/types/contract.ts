@@ -1,3 +1,21 @@
+export interface PaymentRecord {
+  id: number;
+  sender: string;
+  recipient: string;
+  amount: string; // formatted in XLM units
+  rawAmount: string; // stroops i128
+  memo: string;
+  timestamp: number;
+}
+
+export type ContractCallStage =
+  | 'idle'
+  | 'preparing'
+  | 'awaiting_signature'
+  | 'submitting'
+  | 'success'
+  | 'failed';
+
 export interface SorobanContractSpec {
   id: string;
   name: string;
@@ -20,4 +38,7 @@ export interface ContractInvocationResult {
   transactionHash?: string;
   resultValue?: string;
   errorMessage?: string;
+  paymentId?: number;
+  contractId?: string;
+  explorerUrl?: string;
 }
