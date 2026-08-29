@@ -1,9 +1,10 @@
 # StellarPay Pro 🚀
 
-> Next-Generation Stellar Payments & Soroban Smart Contract dApp designed for Stellar Build Challenge (Level 1, Level 2, and Level 3).
+> Next-Generation Stellar Payments & Soroban Smart Contract dApp built for the Stellar Build Challenge (Level 1 Submission).
 
-![StellarPay Pro](https://img.shields.io/badge/Stellar-Testnet-00f2fe?style=flat-square&logo=stellar)
-![React](https://img.shields.io/badge/React-18-61dafb?style=flat-square&logo=react)
+![Stellar Testnet](https://img.shields.io/badge/Stellar-Testnet-00f2fe?style=flat-square&logo=stellar)
+![Freighter Approved](https://img.shields.io/badge/Freighter-v2.0.0-purple?style=flat-square)
+![React 18](https://img.shields.io/badge/React-18.3-61dafb?style=flat-square&logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178c6?style=flat-square&logo=typescript)
 ![Vite](https://img.shields.io/badge/Vite-5.4-646cff?style=flat-square&logo=vite)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind-3.4-38bdf8?style=flat-square&logo=tailwindcss)
@@ -12,60 +13,50 @@
 
 ## 🌟 Overview
 
-**StellarPay Pro** is a high-performance Web3 payment solution built on top of the Stellar Network and Soroban smart contract ecosystem. Designed with ultra-sleek glassmorphic aesthetics, robust decoupled service architecture, and rich interactive dashboards.
+**StellarPay Pro** is a high-performance Web3 financial application built on top of the Stellar Network and Soroban smart contract ecosystem. Designed with glassmorphic aesthetics, strict decoupled architecture, and real-time Horizon REST synchronization.
 
 ---
 
-## 🛠️ Architecture & Tech Stack
+## ✨ Features (Level 1 Completed)
 
-- **Framework**: React 18 + Vite
-- **Language**: TypeScript (Strict typing, no `any`)
-- **Styling**: Tailwind CSS + Vanilla CSS Glassmorphism + Framer Motion
-- **Icons**: Lucide React
+- **Freighter Wallet Connector**: Native authorization flow via `@stellar/freighter-api` v2.0.0 with strict 56-character Ed25519 (`G...`) public key validation.
+- **Session Management & Disconnect**: Persistent connection state with full reset on disconnect.
+- **Stellar Testnet Sync**: Automatic query of Horizon Testnet REST API for live XLM and custom anchor token balances.
+- **Friendbot Faucet Integration**: One-click testnet funding requesting 10,000 Testnet XLM for newly created or unfunded accounts.
+- **Direct XLM Payments**: Construct, sign, and submit real payment operations to Horizon Testnet with optional memos (`MEMO_TEXT` or `MEMO_ID`).
+- **Cryptographic Feedback & Hash Display**: Instant user feedback displaying 64-character transaction hashes with direct StellarExpert Explorer links.
+- **Resilient Error Handling**: Clean catching and reporting for user cancellations, wallet rejections, insufficient balances, and network mismatches.
+
+---
+
+## 🛠️ Technology Stack
+
+- **Core Framework**: React 18 + Vite
+- **Language**: TypeScript (Strict mode enabled, 0 type errors)
+- **Styling**: Tailwind CSS + Vanilla CSS Glassmorphism + Lucide React Icons
 - **State Management**: Zustand
 - **Routing**: React Router DOM v6
 - **Stellar Integration**:
-  - `@stellar/stellar-sdk`
-  - `@stellar/freighter-api`
-  - `@stellar/wallets-kit`
-- **Testing**: Vitest + React Testing Library
+  - `@stellar/stellar-sdk` (v13.0.0)
+  - `@stellar/freighter-api` (v2.0.0)
+- **Testing & Quality**: Vitest (16 unit tests passing), ESLint 9 (0 errors)
 
 ---
 
-## 📁 Directory Structure
-
-```
-src/
-├── assets/         # Brand logos, icons, vectors
-├── components/     # UI primitives (Button, Card, Modal, Input, Badge, Toast, Spinner)
-│   ├── common/     # Navigation (Navbar, Sidebar, MobileNav, Footer)
-│   ├── ui/         # Reusable UI component library
-│   └── wallet/     # Wallet modals & status indicators
-├── constants/      # Network configs, router links, theme presets
-├── hooks/          # Custom React hooks (useWallet, useToast, useStellarAccount)
-├── layouts/        # MainLayout (Public) & DashboardLayout (App shell)
-├── pages/          # Landing, Dashboard, Wallet, Payments, Activity, Campaigns, Contracts, Settings, NotFound
-├── services/       # Decoupled blockchain services (Horizon, Wallet connectors, Soroban)
-├── store/          # Zustand state stores (Wallet, UI, Network)
-├── types/          # Strict TypeScript interface definitions
-├── utils/          # Formatting helpers, address truncators, tailwind-merge helper
-└── main.tsx        # Application mount entry point
-```
-
----
-
-## 🚀 Getting Started
+## 🚀 Local Setup Instructions
 
 ### Prerequisites
 
-- **Node.js**: v18.0.0 or higher
-- **npm**: v9.0.0 or higher
+- **Node.js**: `v18.0.0` or higher
+- **npm**: `v9.0.0` or higher
+- **Freighter Browser Extension**: Installed in Chrome or Edge ([Get Freighter](https://www.freighter.app/))
 
-### Installation
+### Installation & Launch
 
 ```bash
-# 1. Clone or open workspace
-cd stellerpay-pro
+# 1. Clone the repository
+git clone https://github.com/your-username/stellarpay-pro.git
+cd stellarpay-pro
 
 # 2. Install dependencies
 npm install
@@ -77,7 +68,60 @@ cp .env.example .env
 npm run dev
 ```
 
-The application will launch automatically at `http://localhost:3000`.
+The application will launch at `http://localhost:3000`.
+
+---
+
+## 📖 How to Use StellarPay Pro
+
+### 1. How to Connect Freighter Wallet
+1. Open `http://localhost:3000` in Chrome/Edge with Freighter extension installed.
+2. Click **Connect Wallet** in the top Navbar or Wallet Page.
+3. Select **Freighter Wallet**.
+4. In the Freighter extension popup, click **Approve**.
+5. Your public key (`G...`) will be displayed in the Navbar and Wallet Status badge.
+
+### 2. How to Make a Testnet XLM Payment
+1. Navigate to the **Payments** page (`/payments`).
+2. Enter a valid 56-character Stellar public key destination address (e.g. `GCBAK4S46D2M4S35PXQKZ2O6K6T3237M64Q7WEX4Z2L4XJ5Q4Y7K`).
+3. Enter the amount of XLM (e.g. `0.1`).
+4. (Optional) Enter a transaction memo and select Memo Type.
+5. Click **Submit Payment**.
+6. Approve the transaction signature prompt in the Freighter extension popup.
+7. Upon confirmation, a green success banner displays the **Transaction Hash** along with a direct **View on StellarExpert Explorer** link.
+
+### 3. How Disconnect Works
+1. Navigate to **Wallet** (`/wallet`) or open the **Wallet Modal**.
+2. Click **Disconnect Wallet**.
+3. All session state, stored public keys, and cached balances are immediately cleared.
+
+---
+
+## 🛡️ Error Handling & Edge Cases
+
+- **User Rejection / Cancellation**: If access or transaction signature is rejected in Freighter, the app catches the rejection without setting connected state and displays an error toast.
+- **Unfunded Accounts**: If a newly generated public key is not yet funded on Testnet, an interactive alert banner prompts the user to click **Fund with Friendbot**.
+- **Network Mismatch**: If Freighter extension is set to Mainnet (PUBLIC), the application detects the mismatch and prompts the user to switch extension network to Testnet.
+
+---
+
+## 📸 Screenshots (Level 1 Verification)
+
+### 1. Wallet Connected State
+![Wallet Connected](docs/screenshots/wallet-connected.png)
+*Displays truncated public key (G...), active provider badge, and network indicator.*
+
+### 2. XLM Balance Display
+![XLM Balance](docs/screenshots/xlm-balance.png)
+*Live account XLM balance queried from Horizon Testnet REST API.*
+
+### 3. Successful Testnet Transaction
+![Successful Testnet Transaction](docs/screenshots/transaction-success.png)
+*Submitting XLM payment operation signed via Freighter.*
+
+### 4. Transaction Result & Hash
+![Transaction Result](docs/screenshots/transaction-result.png)
+*Confirmation banner showing 64-character Tx Hash and StellarExpert link.*
 
 ---
 
@@ -85,21 +129,22 @@ The application will launch automatically at `http://localhost:3000`.
 
 - **Run Dev Server**: `npm run dev`
 - **Type Check**: `npm run typecheck`
+- **Run Linter**: `npm run lint`
+- **Run Unit Tests**: `npm test`
 - **Production Build**: `npm run build`
-- **Preview Production Build**: `npm run preview`
-- **Run Tests**: `npm run test`
 
 ---
 
 ## 📋 Phase Roadmap
 
 - [x] **Phase 0**: Production Frontend Foundation, Design System, Service Abstractions & Route Shells.
-- [ ] **Phase 1**: Wallet Integration (Freighter, Albedo, Stellar Wallets Kit), Balance Fetching & Live Testnet Horizon Queries.
-- [ ] **Phase 2**: Payment Operations (XLM & Asset transfers, Memo support, Path Payment preview, Transaction signing).
-- [ ] **Phase 3**: Soroban Smart Contract Executor (Smart Escrow, Batch Payments, Contract Deployment & Interacting).
+- [x] **Level 1 Submission**: Freighter Wallet Integration, Horizon Testnet Balance Sync, Payment Execution, Hash Display & Error Handling.
+- [ ] **Level 2 Submission**: Multi-op Payment Batches, Non-custodial Time-locked Escrows & Path Payments.
+- [ ] **Level 3 Submission**: Soroban WASM Smart Contract Studio, Contract Deployment & Event Listeners.
 
 ---
 
 ## 🛡️ License
 
 MIT © StellarPay Pro Team
+
