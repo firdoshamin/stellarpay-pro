@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "env": {
+    "VITE_STELLAR_NETWORK_PASSPHRASE": "Test SDF Network ; September 2015",
+    "VITE_STELLAR_HORIZON_URL": "https://horizon-testnet.stellar.org",
+    "VITE_SOROBAN_RPC_URL": "https://soroban-testnet.stellar.org",
+    "VITE_PAYMENT_TRACKER_CONTRACT_ID": "CBNFYYS23WL3CT6H7O2KVOY3OO2AXYZPXBZTID6SHXZMW55IFVGCQEE7"
+  }
+}
