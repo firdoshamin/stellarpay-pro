@@ -39,6 +39,13 @@
     "typescript-eslint": "^8.68.0",
     "utf-8-validate": "^5.0.10",
     "vite": "^5.4.1",
-    "vitest": "^2.0.5"
+    "vitest": "^2.0.5",
+    "zod": "^3.23.8"
+  },
+  "overrides": {
+    "typescript": "$typescript",
+    "@trezor/blockchain-link": {
+      "@stellar/stellar-sdk": "$@stellar/stellar-sdk"
+    }
   }
 }

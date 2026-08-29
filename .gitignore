@@ -17,6 +17,7 @@ lerna-debug.log*
 
 # Dependencies & Build Output
 node_modules/
+node_modules_old/
 dist/
 dist-ssr/
 target/
