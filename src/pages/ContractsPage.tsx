@@ -175,7 +175,7 @@ export const ContractsPage: React.FC = () => {
           <div className="space-y-1.5 flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-              <span className="text-sm font-bold text-slate-100">Deployed Soroban Smart Contract</span>
+              <span className="text-sm font-bold text-slate-100">Level 3 Payment Tracker Contract</span>
               <Badge variant="success" size="sm">Deployed & Verified</Badge>
             </div>
             <div className="flex items-center gap-2 text-xs font-mono text-slate-300 bg-slate-950/80 px-3 py-1.5 rounded-lg border border-white/10 overflow-x-auto">
@@ -541,7 +541,7 @@ export const ContractsPage: React.FC = () => {
               <div><span className="text-slate-500">Language:</span> Rust (soroban-sdk v21.7.7)</div>
               <div><span className="text-slate-500">Target:</span> wasm32v1-none</div>
               <div><span className="text-slate-500">Optimized Size:</span> 3.3 KB</div>
-              <div><span className="text-slate-500">WASM Hash:</span> d56e0df028d...</div>
+              <div><span className="text-slate-500">WASM Hash:</span> 11a553aac184...</div>
             </CardContent>
           </Card>
         </div>
