@@ -1,3 +1,10 @@
+export enum PaymentStatus {
+  PENDING = 0,
+  COMPLETED = 1,
+  REFUNDED = 2,
+  DISPUTED = 3,
+}
+
 export interface PaymentRecord {
   id: number;
   sender: string;
@@ -6,6 +13,8 @@ export interface PaymentRecord {
   rawAmount: string; // stroops i128
   memo: string;
   timestamp: number;
+  status?: PaymentStatus;
+  statusLabel?: string;
 }
 
 export type ContractCallStage =

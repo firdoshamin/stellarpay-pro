@@ -12,6 +12,7 @@ pub struct PaymentRecord {
     pub amount: i128,
     pub memo: String,
     pub timestamp: u64,
+    pub status: u32, // 0 = Pending, 1 = Completed, 2 = Refunded, 3 = Disputed
 }
 
 #[contracttype]
@@ -56,6 +57,7 @@ impl PaymentTrackerContract {
             amount,
             memo: memo.clone(),
             timestamp,
+            status: 1, // Default status: Completed
         };
 
         // Persistent storage for recorded payment record
@@ -74,6 +76,34 @@ impl PaymentTrackerContract {
         count
     }
 
+    /// Updates payment lifecycle status (e.g. 1 = Completed, 2 = Refunded, 3 = Disputed)
+    /// Requires authentication from payment sender.
+    pub fn update_payment_status(
+        env: Env,
+        payment_id: u64,
+        new_status: u32,
+    ) -> bool {
+        let key = DataKey::Payment(payment_id);
+        let mut record: PaymentRecord = match env.storage().persistent().get(&key) {
+            Some(rec) => rec,
+            None => return false,
+        };
+
+        // Auth check: sender must authorize status change
+        record.sender.require_auth();
+
+        record.status = new_status;
+        env.storage().persistent().set(&key, &record);
+
+        // Emit Soroban event for status update
+        env.events().publish(
+            (symbol_short!("status"), record.sender.clone()),
+            (payment_id, new_status),
+        );
+
+        true
+    }
+
     /// Retrieves a payment record by its unique payment ID.
     pub fn get_payment(env: Env, payment_id: u64) -> Option<PaymentRecord> {
         env.storage().persistent().get(&DataKey::Payment(payment_id))
@@ -82,6 +112,27 @@ impl PaymentTrackerContract {
     /// Returns total number of recorded payment transactions.
     pub fn get_payment_count(env: Env) -> u64 {
         env.storage().instance().get(&DataKey::PaymentCount).unwrap_or(0)
+    }
+}
+
+/// Secondary contract demonstrating real Soroban Inter-Contract Communication
+#[contract]
+pub struct PaymentVerifierContract;
+
+#[contractimpl]
+impl PaymentVerifierContract {
+    /// Inter-contract invocation: calls PaymentTrackerContract from PaymentVerifierContract
+    pub fn record_via_verifier(
+        env: Env,
+        tracker_address: Address,
+        from: Address,
+        to: Address,
+        amount: i128,
+        memo: String,
+    ) -> u64 {
+        from.require_auth();
+        let client = PaymentTrackerContractClient::new(&env, &tracker_address);
+        client.record_payment(&from, &to, &amount, &memo)
     }
 }
 

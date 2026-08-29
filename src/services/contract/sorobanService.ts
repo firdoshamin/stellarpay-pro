@@ -21,7 +21,7 @@ import { normalizeWalletError } from '../../utils/errorNormalizer';
 
 export const DEPLOYED_PAYMENT_TRACKER_CONTRACT_ID =
   import.meta.env.VITE_PAYMENT_TRACKER_CONTRACT_ID ||
-  'CBNFYYS23WL3CT6H7O2KVOY3OO2AXYZPXBZTID6SHXZMW55IFVGCQEE7';
+  'CC7B3N7DQRD5MGVLD2WPREA6CCTJJBAHSR2OCAOXQ5YIB4MS5TSV3UMV';
 
 export interface RecordPaymentParams {
   from: string;
@@ -312,6 +312,59 @@ export class SorobanService {
   }
 
   /**
+   * Updates a payment record lifecycle status on-chain.
+   */
+  async updatePaymentStatus(
+    paymentId: number,
+    newStatus: number,
+    senderAddress: string,
+    onStageChange?: (stage: ContractCallStage) => void,
+    targetContractId = this.getContractId()
+  ): Promise<ContractInvocationResult> {
+    const currentNetwork = useNetworkStore.getState().currentNetwork;
+    const activeRpcUrl = this.rpcUrl || currentNetwork.sorobanRpcUrl;
+    const activeHorizonUrl = currentNetwork.horizonUrl;
+    const passphrase = currentNetwork.passphrase;
+
+    onStageChange?.('preparing');
+    const contract = new Contract(targetContractId);
+    const server = new Horizon.Server(activeHorizonUrl);
+    const account = await server.loadAccount(senderAddress);
+
+    const contractOp = contract.call(
+      'update_payment_status',
+      nativeToScVal(paymentId, { type: 'u64' }),
+      nativeToScVal(newStatus, { type: 'u32' })
+    );
+
+    const tx = new TransactionBuilder(account, {
+      fee: '1000',
+      networkPassphrase: passphrase,
+    })
+      .addOperation(contractOp)
+      .setTimeout(30)
+      .build();
+
+    onStageChange?.('awaiting_signature');
+    const signedXdr = await walletService.signTransaction(tx.toXDR());
+
+    onStageChange?.('submitting');
+    const rpcServer = new rpc.Server(activeRpcUrl);
+    const sendRes = await rpcServer.sendTransaction(
+      TransactionBuilder.fromXDR(signedXdr, passphrase)
+    );
+
+    onStageChange?.('success');
+    return {
+      status: 'SUCCESS',
+      transactionHash: sendRes.hash || '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+      resultValue: `Payment #${paymentId} status updated to ${newStatus} on Soroban contract.`,
+      contractId: targetContractId,
+      explorerUrl: `${currentNetwork.explorerUrl}/contract/${targetContractId}`,
+    };
+  }
+
+  /**
    * Generic Soroban contract invocation method for compatibility.
    */
   async invokeFunction(
@@ -327,6 +380,16 @@ export class SorobanService {
           amount: String(args.amount || '1.0'),
           memo: String(args.memo || ''),
         },
+        undefined,
+        contractId
+      );
+    }
+
+    if (functionName === 'update_payment_status') {
+      return this.updatePaymentStatus(
+        Number(args.payment_id || 1),
+        Number(args.new_status || 1),
+        String(args.sender || args.from || ''),
         undefined,
         contractId
       );

@@ -1,0 +1,46 @@
+name: Deploy Soroban Payment Tracker Contract
+
+on:
+  workflow_dispatch:
+    inputs:
+      network:
+        description: 'Stellar Network (testnet or mainnet)'
+        required: true
+        default: 'testnet'
+
+jobs:
+  deploy-soroban-contract:
+    name: Build WASM & Deploy to Soroban Network
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+
+      - name: Install Stellar CLI
+        run: |
+          cargo install --locked stellar-cli --features opt
+
+      - name: Build Soroban Contract WASM
+        run: |
+          cd contracts/payment_tracker
+          stellar contract build
+
+      - name: Deploy Soroban Contract
+        env:
+          STELLAR_SECRET_KEY: ${{ secrets.STELLAR_ACCOUNT_SECRET }}
+        run: |
+          if [ -z "$STELLAR_SECRET_KEY" ]; then
+            echo "Error: STELLAR_ACCOUNT_SECRET is not configured in GitHub Secrets."
+            exit 1
+          fi
+          cd contracts/payment_tracker
+          stellar contract deploy \
+            --wasm target/wasm32v1-none/release/payment_tracker.wasm \
+            --source-account "$STELLAR_SECRET_KEY" \
+            --network ${{ github.event.inputs.network }}

@@ -8,6 +8,7 @@ import { horizonService } from '../services/stellar/horizonService';
 import { StellarTransactionRecord } from '../types/stellar';
 import { History, ExternalLink, Search, ArrowUpRight, Wallet } from 'lucide-react';
 import { getExplorerUrl } from '../utils/stellar';
+import { LiveActivityFeed } from '../components/LiveActivityFeed';
 
 export const ActivityPage: React.FC = () => {
   const { publicKey, status } = useWallet();
@@ -65,6 +66,9 @@ export const ActivityPage: React.FC = () => {
           />
         </div>
       </div>
+
+      {/* REAL-TIME SOROBAN EVENT STREAMING FEED */}
+      <LiveActivityFeed />
 
       {/* ACTIVITY LIST */}
       <Card variant="glass" className="p-0 overflow-hidden">

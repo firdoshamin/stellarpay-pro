@@ -14,6 +14,7 @@ import {
   ContractCallStage,
   ContractInvocationResult,
 } from '../types/contract';
+import { LiveActivityFeed } from '../components/LiveActivityFeed';
 import {
   Code2,
   Play,
@@ -202,6 +203,9 @@ export const ContractsPage: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* REAL-TIME EVENT STREAMING FEED */}
+      <LiveActivityFeed contractId={contractId} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* CONTRACT FUNCTION EXECUTOR */}

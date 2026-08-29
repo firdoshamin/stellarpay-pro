@@ -22,11 +22,11 @@
                 {
                   "i128": {
                     "hi": 0,
-                    "lo": 5000000000
+                    "lo": 1000000000
                   }
                 },
                 {
-                  "string": "Invoice #1001"
+                  "string": "Invoice #1002"
                 }
               ]
             }
@@ -35,7 +35,28 @@
         }
       ]
     ],
-    [],
+    [
+      [
+        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
+        {
+          "function": {
+            "contract_fn": {
+              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "function_name": "update_payment_status",
+              "args": [
+                {
+                  "u64": 1
+                },
+                {
+                  "u32": 2
+                }
+              ]
+            }
+          },
+          "sub_invocations": []
+        }
+      ]
+    ],
     []
   ],
   "ledger": {
@@ -92,7 +113,7 @@
                       "val": {
                         "i128": {
                           "hi": 0,
-                          "lo": 5000000000
+                          "lo": 1000000000
                         }
                       }
                     },
@@ -109,7 +130,7 @@
                         "symbol": "memo"
                       },
                       "val": {
-                        "string": "Invoice #1001"
+                        "string": "Invoice #1002"
                       }
                     },
                     {
@@ -133,7 +154,7 @@
                         "symbol": "status"
                       },
                       "val": {
-                        "u32": 1
+                        "u32": 2
                       }
                     },
                     {
@@ -233,6 +254,39 @@
       ],
       [
         {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
+            "key": {
+              "ledger_key_nonce": {
+                "nonce": 5541220902715666415
+              }
+            },
+            "durability": "temporary"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
+                "key": {
+                  "ledger_key_nonce": {
+                    "nonce": 5541220902715666415
+                  }
+                },
+                "durability": "temporary",
+                "val": "void"
+              }
+            },
+            "ext": "v0"
+          },
+          6311999
+        ]
+      ],
+      [
+        {
           "contract_code": {
             "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
           }
@@ -284,11 +338,11 @@
                 {
                   "i128": {
                     "hi": 0,
-                    "lo": 5000000000
+                    "lo": 1000000000
                   }
                 },
                 {
-                  "string": "Invoice #1001"
+                  "string": "Invoice #1002"
                 }
               ]
             }
@@ -323,11 +377,11 @@
                 {
                   "i128": {
                     "hi": 0,
-                    "lo": 5000000000
+                    "lo": 1000000000
                   }
                 },
                 {
-                  "string": "Invoice #1001"
+                  "string": "Invoice #1002"
                 }
               ]
             }
@@ -374,10 +428,49 @@
                 "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
               },
               {
-                "symbol": "get_payment_count"
+                "symbol": "update_payment_status"
               }
             ],
-            "data": "void"
+            "data": {
+              "vec": [
+                {
+                  "u64": 1
+                },
+                {
+                  "u32": 2
+                }
+              ]
+            }
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
+        "type_": "contract",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "status"
+              },
+              {
+                "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+              }
+            ],
+            "data": {
+              "vec": [
+                {
+                  "u64": 1
+                },
+                {
+                  "u32": 2
+                }
+              ]
+            }
           }
         }
       },
@@ -395,11 +488,11 @@
                 "symbol": "fn_return"
               },
               {
-                "symbol": "get_payment_count"
+                "symbol": "update_payment_status"
               }
             ],
             "data": {
-              "u64": 1
+              "bool": true
             }
           }
         }
@@ -456,7 +549,7 @@
                   "val": {
                     "i128": {
                       "hi": 0,
-                      "lo": 5000000000
+                      "lo": 1000000000
                     }
                   }
                 },
@@ -473,7 +566,7 @@
                     "symbol": "memo"
                   },
                   "val": {
-                    "string": "Invoice #1001"
+                    "string": "Invoice #1002"
                   }
                 },
                 {
@@ -497,7 +590,7 @@
                     "symbol": "status"
                   },
                   "val": {
-                    "u32": 1
+                    "u32": 2
                   }
                 },
                 {

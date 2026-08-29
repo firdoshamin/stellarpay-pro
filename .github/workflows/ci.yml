@@ -1,0 +1,42 @@
+name: StellarPay Pro CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-and-build:
+    name: Build, Lint & Test Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run TypeScript Typecheck
+        run: npm run typecheck
+
+      - name: Run ESLint Linter
+        run: npm run lint
+
+      - name: Run Vitest Unit Test Suite
+        run: npm test
+
+      - name: Run Production Bundle Build
+        run: npm run build
+        env:
+          VITE_STELLAR_NETWORK_PASSPHRASE: "Test SDF Network ; September 2015"
+          VITE_STELLAR_HORIZON_URL: "https://horizon-testnet.stellar.org"
+          VITE_SOROBAN_RPC_URL: "https://soroban-testnet.stellar.org"
+          VITE_PAYMENT_TRACKER_CONTRACT_ID: "CC7B3N7DQRD5MGVLD2WPREA6CCTJJBAHSR2OCAOXQ5YIB4MS5TSV3UMV"
