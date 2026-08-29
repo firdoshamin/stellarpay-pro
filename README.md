@@ -117,11 +117,11 @@ The application will launch at `http://localhost:3000`.
 
 ### 3. Successful Testnet Transaction
 ![Successful Testnet Transaction](docs/screenshots/transaction-success.png)
-*Submitting XLM payment operation signed via Freighter.*
+*Successful Stellar Testnet XLM payment confirmation displaying the 64-character transaction hash, operation status, and direct StellarExpert Explorer link.*
 
-### 4. Transaction Result & Hash
+### 4. Transaction Result & Failure Handling
 ![Transaction Result](docs/screenshots/transaction-result.png)
-*Confirmation banner showing 64-character Tx Hash and StellarExpert link.*
+*Payment form confirmation and resilient error handling for rejections or invalid transactions.*
 
 ---
 
