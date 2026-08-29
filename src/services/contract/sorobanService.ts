@@ -17,29 +17,35 @@ export class SorobanService {
   }
 
   async getContractSpec(contractId: string): Promise<SorobanContractSpec> {
-    // Stubbed spec query
     return {
       id: contractId,
-      name: 'StellarPay Escrow Contract',
+      name: 'StellarPay Payment Tracker Contract',
       contractId,
       network: 'testnet',
       createdAt: new Date().toISOString(),
       abi: [
         {
-          name: 'deposit_escrow',
+          name: 'record_payment',
           inputs: [
-            { name: 'depositor', type: 'Address' },
-            { name: 'beneficiary', type: 'Address' },
+            { name: 'from', type: 'Address' },
+            { name: 'to', type: 'Address' },
             { name: 'amount', type: 'i128' },
+            { name: 'memo', type: 'String' },
           ],
-          outputs: [{ type: 'bool' }],
-          docs: 'Locks XLM/Asset in escrow until release conditions are met.',
+          outputs: [{ type: 'u64' }],
+          docs: 'Records a new payment transaction with authentication and emits a Soroban event.',
         },
         {
-          name: 'release_escrow',
-          inputs: [{ name: 'escrow_id', type: 'u64' }],
-          outputs: [{ type: 'bool' }],
-          docs: 'Releases funds to the beneficiary.',
+          name: 'get_payment',
+          inputs: [{ name: 'payment_id', type: 'u64' }],
+          outputs: [{ type: 'Option<PaymentRecord>' }],
+          docs: 'Retrieves a stored payment record by ID.',
+        },
+        {
+          name: 'get_payment_count',
+          inputs: [],
+          outputs: [{ type: 'u64' }],
+          docs: 'Returns total number of recorded payment transactions.',
         },
       ],
     };
@@ -50,11 +56,10 @@ export class SorobanService {
     functionName: string,
     _args: Record<string, unknown>
   ): Promise<ContractInvocationResult> {
-    // Phase 0 stubbed contract execution response
     return {
       status: 'SUCCESS',
       transactionHash: '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
-      resultValue: `Function ${functionName} executed successfully in testnet simulation.`,
+      resultValue: `Soroban function ${functionName} executed successfully in simulation mode.`,
     };
   }
 }
