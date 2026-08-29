@@ -1,4 +1,4 @@
-export type WalletType = 'freighter' | 'albedo' | 'xbull' | 'lobstr' | 'secret_key';
+export type WalletType = 'freighter' | 'albedo' | 'xbull' | 'rabet' | 'lobstr' | 'hana' | 'secret_key';
 
 export type WalletStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 

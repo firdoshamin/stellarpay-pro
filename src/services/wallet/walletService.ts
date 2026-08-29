@@ -3,8 +3,19 @@ import {
   requestAccess,
   getPublicKey,
   getNetwork,
-  signTransaction,
+  signTransaction as freighterSignTransaction,
 } from '@stellar/freighter-api';
+
+import {
+  StellarWalletsKit,
+  Networks,
+} from '@creit.tech/stellar-wallets-kit';
+import { FreighterModule, FREIGHTER_ID } from '@creit.tech/stellar-wallets-kit/modules/freighter';
+import { AlbedoModule, ALBEDO_ID } from '@creit.tech/stellar-wallets-kit/modules/albedo';
+import { xBullModule, XBULL_ID } from '@creit.tech/stellar-wallets-kit/modules/xbull';
+import { RabetModule, RABET_ID } from '@creit.tech/stellar-wallets-kit/modules/rabet';
+import { LobstrModule, LOBSTR_ID } from '@creit.tech/stellar-wallets-kit/modules/lobstr';
+import { HanaModule, HANA_ID } from '@creit.tech/stellar-wallets-kit/modules/hana';
 
 import { WalletType } from '../../types/wallet';
 import { STELLAR_NETWORKS } from '../../constants/network';
@@ -14,54 +25,92 @@ import {
   WalletConnectionResult,
 } from './types';
 
+const WALLET_MODULE_IDS: Record<string, string> = {
+  freighter: FREIGHTER_ID,
+  albedo: ALBEDO_ID,
+  xbull: XBULL_ID,
+  rabet: RABET_ID,
+  lobstr: LOBSTR_ID,
+  hana: HANA_ID,
+};
+
 export class WalletService implements IWalletService {
   private activeWalletType: WalletType | null = null;
   private activePublicKey: string | null = null;
+  private isKitInitialized = false;
+
+  private initKit(): void {
+    if (typeof window === 'undefined' || this.isKitInitialized) return;
+    try {
+      console.log('[StellarPay WalletService] Initializing StellarWalletsKit v2.5.0...');
+      StellarWalletsKit.init({
+        modules: [
+          new FreighterModule(),
+          new AlbedoModule(),
+          new xBullModule(),
+          new RabetModule(),
+          new LobstrModule(),
+          new HanaModule(),
+        ],
+        network: Networks.TESTNET,
+      });
+      this.isKitInitialized = true;
+      console.log('[StellarPay WalletService] StellarWalletsKit initialized successfully.');
+    } catch (err) {
+      console.warn('[StellarPay WalletService] StellarWalletsKit init error:', err);
+    }
+  }
 
   async isInstalled(walletType: WalletType): Promise<boolean> {
-    if (walletType !== 'freighter') {
-      return false;
+    if (walletType === 'freighter') {
+      if (typeof window !== 'undefined' && (window as unknown as { freighter?: unknown }).freighter) {
+        return true;
+      }
+      try {
+        const res = await isConnected();
+        if (typeof res === 'boolean') return res;
+        if (res && typeof res === 'object') {
+          if ('isConnected' in res) return Boolean((res as { isConnected: boolean }).isConnected);
+          if ('error' in res && (res as { error?: string }).error) return false;
+          return true;
+        }
+        return Boolean(res);
+      } catch {
+        return false;
+      }
     }
 
-    // Direct check for injected window object in browser
-    if (typeof window !== 'undefined' && (window as unknown as { freighter?: unknown }).freighter) {
-      console.log('[StellarPay WalletService] Freighter detected via window.freighter object.');
+    if (walletType === 'albedo') {
+      // Albedo is web-popup based, available on all modern web browsers
       return true;
     }
 
-    try {
-      const res = await isConnected();
-      console.log('[StellarPay WalletService] isConnected() returned:', res);
-
-      if (typeof res === 'boolean') {
-        return res;
-      }
-      if (res && typeof res === 'object') {
-        if ('isConnected' in res) {
-          return Boolean((res as { isConnected: boolean }).isConnected);
-        }
-        if ('error' in res && (res as { error?: string }).error) {
-          return false;
-        }
-        return true; // Any truthy object returned by freighter API implies extension presence
-      }
-      return Boolean(res);
-    } catch (err) {
-      console.warn('[StellarPay WalletService] isConnected check threw:', err);
-      return false;
+    if (walletType === 'xbull') {
+      return typeof window !== 'undefined' && Boolean((window as unknown as { xBull?: unknown }).xBull);
     }
+
+    if (walletType === 'rabet') {
+      return typeof window !== 'undefined' && Boolean((window as unknown as { rabet?: unknown }).rabet);
+    }
+
+    if (walletType === 'hana') {
+      return typeof window !== 'undefined' && Boolean((window as unknown as { hana?: unknown }).hana);
+    }
+
+    if (walletType === 'lobstr') {
+      return typeof window !== 'undefined' && Boolean((window as unknown as { lobstr?: unknown }).lobstr);
+    }
+
+    return false;
   }
 
   private withTimeout<T>(
     promise: Promise<T>,
-    timeoutMs = 30000,
-    errorMessage = 'Freighter connection request timed out.'
+    timeoutMs = 35000,
+    errorMessage = 'Wallet connection request timed out.'
   ): Promise<T> {
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        reject(new Error(errorMessage));
-      }, timeoutMs);
-
+      const timer = setTimeout(() => reject(new Error(errorMessage)), timeoutMs);
       promise
         .then((res) => {
           clearTimeout(timer);
@@ -77,141 +126,131 @@ export class WalletService implements IWalletService {
   async connect(walletType: WalletType): Promise<WalletConnectionResult> {
     console.log(`[StellarPay WalletService] connect() called with walletType="${walletType}"`);
 
-    if (walletType !== 'freighter') {
-      throw new Error(`Wallet provider "${walletType}" is not supported. Please select Freighter Wallet.`);
-    }
+    // 1. Direct Freighter connection path (Level 1 baseline)
+    if (walletType === 'freighter') {
+      const installed = await this.isInstalled('freighter');
+      if (!installed) {
+        throw new Error('Freighter wallet extension not detected in your browser. Please install the official Freighter extension and refresh this page.');
+      }
 
-    // 1. Check if Freighter extension is detected in browser
-    const installed = await this.isInstalled(walletType);
-    if (!installed) {
-      console.warn('[StellarPay WalletService] Freighter extension NOT installed or NOT detected.');
-      throw new Error(
-        'Freighter wallet extension not detected in your browser. Please install the official Freighter extension and refresh this page.'
-      );
-    }
-
-    try {
-      // 2. Trigger requestAccess popup in Freighter extension
-      console.log('[StellarPay WalletService] Requesting access authorization from Freighter extension...');
-      let accessResult: unknown = null;
       try {
-        accessResult = await this.withTimeout(
+        console.log('[StellarPay WalletService] Triggering Freighter requestAccess()...');
+        const accessResult = await this.withTimeout(
           requestAccess(),
           35000,
           'Freighter connection request timed out. Please unlock your Freighter extension and approve access.'
         );
-        console.log('[StellarPay WalletService] requestAccess raw output:', accessResult);
-      } catch (reqErr) {
-        console.error('[StellarPay WalletService] requestAccess thrown:', reqErr);
-        const rawMsg = reqErr instanceof Error ? reqErr.message : String(reqErr);
-        if (
-          rawMsg.toLowerCase().includes('reject') ||
-          rawMsg.toLowerCase().includes('cancel') ||
-          rawMsg.toLowerCase().includes('decline') ||
-          rawMsg.toLowerCase().includes('user')
-        ) {
-          throw new Error('Wallet connection request was cancelled or declined in Freighter.');
-        }
-        throw new Error(`Freighter connection error: ${rawMsg}`);
-      }
 
-      let publicKey = '';
-
-      if (typeof accessResult === 'string') {
-        const trimmed = accessResult.trim();
-        if (trimmed.startsWith('G') && trimmed.length === 56) {
-          publicKey = trimmed;
-        } else if (
-          trimmed.toLowerCase().includes('error') ||
-          trimmed.toLowerCase().includes('reject') ||
-          trimmed.toLowerCase().includes('cancel') ||
-          trimmed.toLowerCase().includes('decline')
-        ) {
-          throw new Error(`Freighter authorization rejected: ${trimmed}`);
+        let publicKey = '';
+        if (typeof accessResult === 'string') {
+          const trimmed = accessResult.trim();
+          if (trimmed.startsWith('G') && trimmed.length === 56) {
+            publicKey = trimmed;
+          } else if (trimmed.toLowerCase().includes('reject') || trimmed.toLowerCase().includes('cancel') || trimmed.toLowerCase().includes('decline')) {
+            throw new Error('Wallet connection request was cancelled or declined in Freighter.');
+          }
+        } else if (accessResult && typeof accessResult === 'object') {
+          const resObj = accessResult as { address?: string; publicKey?: string; error?: string };
+          if (resObj.error) {
+            throw new Error(`Freighter authorization rejected: ${resObj.error}`);
+          }
+          publicKey = resObj.address || resObj.publicKey || '';
         }
-      } else if (accessResult && typeof accessResult === 'object') {
-        const resObj = accessResult as { address?: string; publicKey?: string; error?: string };
-        if (resObj.error) {
-          throw new Error(`Freighter authorization rejected: ${resObj.error}`);
-        }
-        publicKey = resObj.address || resObj.publicKey || '';
-      }
 
-      // Fallback: If requestAccess did not return public key string directly, call getPublicKey()
-      if (!publicKey || !publicKey.startsWith('G') || publicKey.length !== 56) {
-        console.log('[StellarPay WalletService] Calling getPublicKey() fallback...');
-        try {
+        if (!publicKey || !publicKey.startsWith('G') || publicKey.length !== 56) {
           const pkResult = await getPublicKey();
-          console.log('[StellarPay WalletService] getPublicKey() raw output:', pkResult);
-          if (typeof pkResult === 'string') {
-            const trimmedPk = pkResult.trim();
-            if (trimmedPk.startsWith('G') && trimmedPk.length === 56) {
-              publicKey = trimmedPk;
-            }
+          if (typeof pkResult === 'string' && pkResult.trim().startsWith('G') && pkResult.trim().length === 56) {
+            publicKey = pkResult.trim();
           } else if (pkResult && typeof pkResult === 'object') {
-            const pkObj = pkResult as { address?: string; publicKey?: string };
-            const candidate = pkObj.address || pkObj.publicKey || '';
+            const candidate = ((pkResult as { address?: string; publicKey?: string }).address || (pkResult as { address?: string; publicKey?: string }).publicKey || '').trim();
             if (candidate.startsWith('G') && candidate.length === 56) {
               publicKey = candidate;
             }
           }
-        } catch (pkErr) {
-          console.warn('[StellarPay WalletService] Fallback getPublicKey failed:', pkErr);
         }
+
+        if (!publicKey || !publicKey.startsWith('G') || publicKey.length !== 56) {
+          throw new Error('Connection failed: No valid Stellar public key (56 characters starting with G) was returned by Freighter.');
+        }
+
+        try {
+          const netRes = await getNetwork();
+          const netName = typeof netRes === 'string' ? netRes : (netRes as { network?: string })?.network || '';
+          if (netName && netName.toUpperCase() === 'PUBLIC') {
+            throw new Error('Freighter is currently connected to Stellar Mainnet (PUBLIC). Please switch your Freighter extension network to Testnet.');
+          }
+        } catch (netErr) {
+          if (netErr instanceof Error && netErr.message.includes('switch your Freighter')) {
+            throw netErr;
+          }
+        }
+
+        this.activeWalletType = 'freighter';
+        this.activePublicKey = publicKey;
+        return { publicKey, walletType: 'freighter', networkId: 'testnet' };
+      } catch (error) {
+        this.activeWalletType = null;
+        this.activePublicKey = null;
+        if (error instanceof Error) throw error;
+        throw new Error('Unable to complete connection to Freighter.');
       }
+    }
 
-      // STRICT VALIDATION: Must be a valid 56-character Ed25519 key starting with 'G'
-      if (!publicKey || typeof publicKey !== 'string' || !publicKey.startsWith('G') || publicKey.length !== 56) {
-        console.error('[StellarPay WalletService] Invalid or missing public key after authorization:', publicKey);
-        throw new Error('Connection failed: No valid Stellar public key (56 characters starting with G) was returned by Freighter.');
-      }
+    // 2. Multi-Wallet Integration via StellarWalletsKit (Albedo, xBull, Rabet, Lobstr, Hana)
+    const moduleId = WALLET_MODULE_IDS[walletType];
+    if (!moduleId) {
+      throw new Error(`Wallet provider "${walletType}" is not supported.`);
+    }
 
-      console.log(`[StellarPay WalletService] Successfully retrieved public key: ${publicKey}`);
+    const available = await this.isInstalled(walletType);
+    if (!available) {
+      throw new Error(`Wallet provider "${walletType.toUpperCase()}" is not installed or available in your browser.`);
+    }
 
-      // 3. Network Check: ensure user is not on Mainnet PUBLIC when app expects Testnet
-      try {
-        const netRes = await getNetwork();
-        console.log('[StellarPay WalletService] Detected Freighter Network:', netRes);
-        let netName = '';
-        if (typeof netRes === 'string') {
-          netName = netRes;
-        } else if (netRes && typeof netRes === 'object') {
-          netName = (netRes as { network?: string }).network || '';
-        }
+    try {
+      this.initKit();
+      console.log(`[StellarPay WalletService] Connecting via StellarWalletsKit moduleId="${moduleId}"...`);
+      StellarWalletsKit.setWallet(moduleId);
+      StellarWalletsKit.setNetwork(Networks.TESTNET);
 
-        if (netName && netName.toUpperCase() === 'PUBLIC') {
-          throw new Error('Freighter is currently connected to Stellar Mainnet (PUBLIC). Please switch your Freighter extension network to Testnet.');
-        }
-      } catch (netErr) {
-        if (netErr instanceof Error && netErr.message.includes('switch your Freighter')) {
-          throw netErr;
-        }
-        console.warn('[StellarPay WalletService] Network check non-blocking warning:', netErr);
+      const res = await this.withTimeout(
+        StellarWalletsKit.fetchAddress(),
+        45000,
+        `${walletType.toUpperCase()} wallet request timed out.`
+      );
+
+      const publicKey = (res?.address || '').trim();
+      if (!publicKey || !publicKey.startsWith('G') || publicKey.length !== 56) {
+        throw new Error(`Connection failed: No valid Ed25519 public key (G...) returned by ${walletType.toUpperCase()}.`);
       }
 
       this.activeWalletType = walletType;
       this.activePublicKey = publicKey;
+      console.log(`[StellarPay WalletService] Connected ${walletType} with key: ${publicKey}`);
 
       return {
         publicKey,
         walletType,
         networkId: 'testnet',
       };
-    } catch (error) {
+    } catch (err) {
       this.activeWalletType = null;
       this.activePublicKey = null;
-
-      console.error('[StellarPay WalletService] Connection failed:', error);
-      if (error instanceof Error) {
-        throw error;
-      }
-
-      throw new Error('Unable to complete connection to Freighter.');
+      console.error(`[StellarPay WalletService] StellarWalletsKit connect error for ${walletType}:`, err);
+      if (err instanceof Error) throw err;
+      throw new Error(`Failed to connect to ${walletType}.`);
     }
   }
 
   async disconnect(): Promise<void> {
-    console.log('[StellarPay WalletService] Clearing active wallet session.');
+    console.log('[StellarPay WalletService] Disconnecting active wallet session.');
+    if (this.isKitInitialized) {
+      try {
+        await StellarWalletsKit.disconnect();
+      } catch (err) {
+        console.warn('[StellarPay WalletService] Kit disconnect non-blocking warning:', err);
+      }
+    }
     this.activeWalletType = null;
     this.activePublicKey = null;
   }
@@ -224,49 +263,66 @@ export class WalletService implements IWalletService {
       throw new Error('No wallet connected.');
     }
 
-    console.log('[StellarPay WalletService] Requesting transaction signature via Freighter...');
-    try {
-      const activePassphrase = useNetworkStore.getState().currentNetwork.passphrase || STELLAR_NETWORKS.testnet.passphrase;
+    const activePassphrase = useNetworkStore.getState().currentNetwork.passphrase || STELLAR_NETWORKS.testnet.passphrase;
 
-      const signedRes = await signTransaction(xdr, {
+    // Use direct native Freighter signing if Freighter is active
+    if (this.activeWalletType === 'freighter') {
+      console.log('[StellarPay WalletService] Signing transaction via native Freighter...');
+      try {
+        const signedRes = await freighterSignTransaction(xdr, {
+          networkPassphrase: activePassphrase,
+          accountToSign: this.activePublicKey,
+          ...opts,
+        });
+
+        let signedXdr = '';
+        if (typeof signedRes === 'string') {
+          signedXdr = signedRes;
+        } else if (signedRes && typeof signedRes === 'object') {
+          const signedObj = signedRes as { signedTxXdr?: string; error?: string };
+          if (signedObj.error) throw new Error(signedObj.error);
+          signedXdr = signedObj.signedTxXdr || '';
+        }
+
+        if (!signedXdr || typeof signedXdr !== 'string') {
+          throw new Error('Transaction signing was cancelled or failed.');
+        }
+
+        return signedXdr;
+      } catch (error) {
+        if (error instanceof Error) {
+          if (error.message.toLowerCase().includes('reject') || error.message.toLowerCase().includes('cancel')) {
+            throw new Error('Transaction signing was cancelled in Freighter extension.');
+          }
+          throw error;
+        }
+        throw new Error('Transaction signing failed in Freighter.');
+      }
+    }
+
+    // Multi-wallet signing via StellarWalletsKit
+    console.log(`[StellarPay WalletService] Signing transaction via StellarWalletsKit for ${this.activeWalletType}...`);
+    try {
+      this.initKit();
+      const res = await StellarWalletsKit.signTransaction(xdr, {
         networkPassphrase: activePassphrase,
-        accountToSign: this.activePublicKey,
-        ...opts,
+        address: this.activePublicKey,
       });
 
-      console.log('[StellarPay WalletService] Transaction signature response received.');
+      if (!res || !res.signedTxXdr) {
+        throw new Error('Transaction signing was cancelled or produced no XDR output.');
+      }
 
-      let signedXdr = '';
-      if (typeof signedRes === 'string') {
-        signedXdr = signedRes;
-      } else if (signedRes && typeof signedRes === 'object') {
-        const signedObj = signedRes as { signedTxXdr?: string; error?: string };
-        if (signedObj.error) {
-          throw new Error(signedObj.error);
+      return res.signedTxXdr;
+    } catch (err) {
+      console.error('[StellarPay WalletService] StellarWalletsKit signTransaction error:', err);
+      if (err instanceof Error) {
+        if (err.message.toLowerCase().includes('reject') || err.message.toLowerCase().includes('cancel')) {
+          throw new Error(`Transaction signing was cancelled in ${this.activeWalletType?.toUpperCase()}.`);
         }
-        signedXdr = signedObj.signedTxXdr || '';
+        throw err;
       }
-
-      if (!signedXdr || typeof signedXdr !== 'string') {
-        throw new Error('Transaction signing was cancelled or failed.');
-      }
-
-      return signedXdr;
-    } catch (error) {
-      console.error('[StellarPay WalletService] signTransaction error:', error);
-      if (error instanceof Error) {
-        if (
-          error.message.toLowerCase().includes('reject') ||
-          error.message.toLowerCase().includes('cancel') ||
-          error.message.toLowerCase().includes('decline') ||
-          error.message.toLowerCase().includes('user')
-        ) {
-          throw new Error('Transaction signing was cancelled in Freighter extension.');
-        }
-        throw error;
-      }
-
-      throw new Error('Transaction signing failed in Freighter.');
+      throw new Error(`Transaction signing failed in ${this.activeWalletType?.toUpperCase()}.`);
     }
   }
 
@@ -281,29 +337,20 @@ export class WalletService implements IWalletService {
   async checkExistingConnection(): Promise<WalletConnectionResult | null> {
     try {
       const installed = await this.isInstalled('freighter');
-      if (!installed) {
-        return null;
-      }
+      if (!installed) return null;
 
-      console.log('[StellarPay WalletService] Checking existing connection via getPublicKey()...');
       const pkResult = await getPublicKey();
       let publicKey = '';
-
-      if (typeof pkResult === 'string') {
-        const trimmed = pkResult.trim();
-        if (trimmed.startsWith('G') && trimmed.length === 56) {
-          publicKey = trimmed;
-        }
+      if (typeof pkResult === 'string' && pkResult.trim().startsWith('G') && pkResult.trim().length === 56) {
+        publicKey = pkResult.trim();
       } else if (pkResult && typeof pkResult === 'object') {
-        const pkObj = pkResult as { address?: string; publicKey?: string };
-        const candidate = (pkObj.address || pkObj.publicKey || '').trim();
+        const candidate = ((pkResult as { address?: string; publicKey?: string }).address || (pkResult as { address?: string; publicKey?: string }).publicKey || '').trim();
         if (candidate.startsWith('G') && candidate.length === 56) {
           publicKey = candidate;
         }
       }
 
       if (publicKey) {
-        console.log('[StellarPay WalletService] Restored active session key:', publicKey);
         this.activeWalletType = 'freighter';
         this.activePublicKey = publicKey;
         return {
