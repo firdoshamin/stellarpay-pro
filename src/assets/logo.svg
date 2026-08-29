@@ -1,0 +1,29 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="stellarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="50%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#8b5cf6" />
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.2" />
+    </linearGradient>
+    <filter id="shadowGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Outer Ring -->
+  <circle cx="60" cy="60" r="52" stroke="url(#stellarGrad)" stroke-width="3" stroke-dasharray="8 4" opacity="0.6" />
+  
+  <!-- Central Glowing Orb -->
+  <circle cx="60" cy="60" r="38" fill="url(#glowGrad)" filter="url(#shadowGlow)" />
+
+  <!-- Four Point Stellar Star Motif -->
+  <path d="M60 22 L67 48 L93 42 L73 60 L93 78 L67 72 L60 98 L53 72 L27 78 L47 60 L27 42 L53 48 Z" fill="url(#stellarGrad)" />
+  
+  <!-- Core Highlight -->
+  <circle cx="60" cy="60" r="7" fill="#ffffff" />
+</svg>
