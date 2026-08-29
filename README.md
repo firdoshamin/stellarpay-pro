@@ -26,7 +26,7 @@
 
 ## 🎥 Level 3 Demo Video
 
-Demo video: [PASTE_YOUR_VIDEO_LINK_HERE]
+[StellarPay Pro — Stellar Level 3 dApp Demo](https://youtu.be/tCQpAvMea6Y)
 
 ---
 
